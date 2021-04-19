@@ -1,0 +1,101 @@
+import { IsAlpha, IsBoolean, IsEnum, IsPositive } from 'class-validator';
+import {
+  Controller,
+  Req,
+  Res,
+  Param,
+  Body,
+  Get,
+  Post,
+  Put,
+  Delete,
+  ContentType,
+  Patch,
+  QueryParam,
+  JsonController,
+  QueryParams,
+  BodyParam,
+  HeaderParam,
+  CookieParam,
+  SessionParam,
+  HttpCode,
+  OnUndefined,
+  NotFoundError,
+} from 'routing-controllers';
+
+enum Roles {
+  Admin = 'admin',
+  User = 'user',
+  Guest = 'guest',
+}
+
+class GetUsersQuery {
+  @IsPositive()
+  limit: number;
+
+  @IsAlpha()
+  city: string;
+
+  @IsEnum(Roles)
+  role: Roles;
+
+  @IsBoolean()
+  isActive: boolean;
+}
+
+// @JsonController()
+@Controller('/users')
+export class UserController {
+  @Get('')
+  @ContentType('application/json')
+  getUsers(@QueryParams() query: GetUsersQuery, @CookieParam('username') username: string) {
+    // here you can access query.role, query.limit
+    // and others valid query parameters
+    return [
+      { id: 1, name: 'First user!' },
+      { id: 2, name: 'Second user!' },
+    ];
+  }
+
+  @Get('/:id')
+  @OnUndefined(404)
+  getOne(@Req() req: any) {
+    if (!req) throw new NotFoundError(`User was not found.`); // message is optional
+
+    return 'User #' + req.params.id;
+  }
+
+  // @Get('/')
+  // getUsers(@QueryParam('limit') limit: number) {}
+
+  @Post('/')
+  post(@Body() user: any, @SessionParam('userInfo') userInfo: any) {
+    // @Body User model
+    let data = JSON.stringify(user); // probably you want to install body-parser for express
+    return 'User ' + data + ' !saved!';
+  }
+
+  @Post('/example')
+  saveUser(@BodyParam('name') userName: string, @HeaderParam('authorization') token: string) {}
+
+  @Put('/:id')
+  put(@Param('id') id: number) {
+    return 'User #' + id + ' has been putted!';
+  }
+  // @Put('/:id')
+  // put(@Req() Req: Req) {
+  //   return 'User #' + Req.params.id + ' has been putted!';
+  // }
+
+  @Patch('/:id')
+  patch(@Req() req: any) {
+    return 'User #' + req.params.id + ' has been patched!';
+  }
+
+  @HttpCode(204)
+  @OnUndefined(204)
+  @Delete('/:id')
+  remove(@Req() req: any) {
+    return 'User #' + req.params.id + ' has been removed!';
+  }
+}
